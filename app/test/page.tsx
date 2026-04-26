@@ -5,285 +5,386 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { returnName } from '@/app/utils'
 
-type SpeciesWithCount = {
-    id: number;
-    observations_count: number;
-    [key: string]: any;
-};
+/* ── Types ───────────────────────────────────────────────── */
+type PhotoInfo = { url: string; attribution?: string };
 
-interface SpeciesData {
-    total_results: number;
-    results: SpeciesWithCount[];
+type Species = { id: number; observations_count: number;[key: string]: any };
+
+interface QuestionState {
+    url: PhotoInfo | null;
+    species: Species[] | null;
+    correct: number | null;
 }
 
-type PhotoInfo = {
-    url: string;
-    attribution?: string;
-};
+interface AnsweredQuestion {
+    question: QuestionState;
+    userResponse: number;
+    isCorrect: boolean;
+}
 
-function filterZeros(arr: { observations_count: number }[]) {
-    //TODO: maybe binary search instead of linear search XD
-    console.log(arr.length)
+/* ── Helpers ─────────────────────────────────────────────── */
+function filterZeros(arr: Species[]): Species[] {
     let n = 1;
-    while (n < arr.length && arr[n]['observations_count'] > 0) {
-        n++;
-    }
-    const result: any[] = arr.slice(0, n);
-    return result;
+    while (n < arr.length && arr[n].observations_count > 0) n++;
+    return arr.slice(0, n);
 }
 
-function getRandomCombination(arr: any[], k: number) {
-    const tempArr = [...arr];
-    const combination: any[] = [];
+function getRandomCombination<T>(arr: T[], k: number): T[] {
+    const tmp = [...arr];
+    const out: T[] = [];
     for (let i = 0; i < k; i++) {
-        const randIndex = Math.floor(Math.random() * tempArr.length);
-        combination.push(tempArr[randIndex]);
-        tempArr.splice(randIndex, 1);
+        const idx = Math.floor(Math.random() * tmp.length);
+        out.push(tmp[idx]);
+        tmp.splice(idx, 1);
     }
-    return combination;
+    return out;
 }
 
-function Question({ taxonName, question, handleAnswer }: {
-    taxonName: string,
-    question: any,
-    handleAnswer: (userResponse: number) => void
+/* ── Question component ──────────────────────────────────── */
+function Question({
+    taxonName,
+    question,
+    questionIndex,
+    numQuestions,
+    handleAnswer,
+}: {
+    taxonName: string;
+    question: QuestionState;
+    questionIndex: number;
+    numQuestions: number;
+    handleAnswer: (userResponse: number) => void;
 }) {
-    const dialogRef = useRef<HTMLDialogElement | null>(null)
-    if (!question['url'])
-        return <div className="p-6 text-center">
-            <p>No data for this taxon: {taxonName}</p>
-        </div>;
-    const options = question.species.map((species: any, i: number) => (
-        <div key={i} className="my-2">
-            <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-                onClick={() => { handleAnswer(i) }}
-            >
-                {returnName(species)}
-            </button>
-        </div>
-    ));
+    const dialogRef = useRef<HTMLDialogElement | null>(null);
+
+    if (!question.url) {
+        return (
+            <div className="quiz-page">
+                <div className="quiz-card" style={{ maxWidth: 480, padding: '2rem', textAlign: 'center' }}>
+                    <p style={{ color: 'var(--color-muted)' }}>No hi ha dades per a aquest taxó.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const imageUrl = question.url.url.replace("square", "original");
 
     return (
-        <div>
-            <dialog ref={dialogRef} onClick={() => dialogRef.current?.close()} className="w-2/3 max-w-none backdrop:bg-black/80">
-                <img src={question.url["url"].replace("square", "original")} alt="Species" className="rounded w-full h-auto object-contain" />
+        <div className="quiz-page">
+            {/* Lightbox */}
+            <dialog
+                ref={dialogRef}
+                onClick={() => dialogRef.current?.close()}
+                style={{
+                    width: '90vw',
+                    maxWidth: '900px',
+                    padding: 0,
+                    borderRadius: '0.75rem',
+                    border: 'none',
+                    background: 'transparent',
+                }}
+                className="backdrop:bg-black/80"
+            >
+                <img
+                    src={imageUrl}
+                    alt="Species"
+                    style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '0.75rem' }}
+                />
             </dialog>
-            <div className="p-6 bg-gray-100 rounded-lg shadow-md text-center">
-                <h1 className="text-2xl font-semibold text-gray-800 mb-4">Mode de joc: {taxonName}</h1>
-                <button onClick={() => dialogRef.current?.showModal()}>
-                    <img src={question.url["url"].replace("square", "original")} alt="Species" className="w-full max-w-md mx-auto mb-4 rounded shadow-sm" />
-                </button>
-                <p className="text-sm text-gray-500 italic mb-6">{question.url["attribution"]}</p>
-                <ul className="space-y-2">{options}</ul>
+
+            <div className="quiz-card">
+                {/* Header */}
+                <div className="quiz-card__header">
+                    <h1 className="quiz-card__title">{taxonName}</h1>
+                    <span className="quiz-card__progress">
+                        {questionIndex + 1} / {numQuestions}
+                    </span>
+                </div>
+
+                {/* Body: image left + options right */}
+                <div className="quiz-card__body">
+                    <button
+                        className="quiz-card__image-wrap"
+                        onClick={() => dialogRef.current?.showModal()}
+                        aria-label="Ampliar imatge"
+                    >
+                        <img
+                            src={imageUrl}
+                            alt="De quina espècie és aquesta foto?"
+                            className="quiz-card__image"
+                        />
+                        <span className="quiz-card__zoom-hint">🔍 Ampliar</span>
+                    </button>
+
+                    <div className="quiz-card__options">
+                        <p className="quiz-card__options-label">Quina espècie és?</p>
+                        {question.species!.map((species, i) => (
+                            <button
+                                key={i}
+                                className="quiz-btn"
+                                onClick={() => handleAnswer(i)}
+                            >
+                                {returnName(species)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Attribution */}
+                {question.url.attribution && (
+                    <p className="quiz-card__attribution">{question.url.attribution}</p>
+                )}
             </div>
         </div>
     );
 }
 
-function Results({ points, numQuestions, answeredQuestions }: {
-    points: number,
-    numQuestions: number,
-    answeredQuestions: { question: any; userResponse: number; isCorrect: boolean }[]
+/* ── Results component ───────────────────────────────────── */
+function Results({
+    points,
+    numQuestions,
+    answeredQuestions,
+}: {
+    points: number;
+    numQuestions: number;
+    answeredQuestions: AnsweredQuestion[];
 }) {
     const dialogRef = useRef<HTMLDialogElement | null>(null);
     const [activeImage, setActiveImage] = useState<string | null>(null);
+
+    const pct = Math.round((points / numQuestions) * 100);
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <h2 className="mt-8 text-3xl font-semibold text-gray-800 mb-4">Test completat!</h2>
-            <p className="text-lg text-gray-700 mb-6">
-                N'has encertat <span className="font-bold text-blue-600">{points}</span> de{' '}
-                <span className="font-bold text-blue-600">{numQuestions}</span>
-            </p>
+        <div className="results-page">
+            {/* Lightbox */}
+            <dialog
+                ref={dialogRef}
+                onClick={() => dialogRef.current?.close()}
+                style={{
+                    width: '90vw',
+                    maxWidth: '900px',
+                    padding: 0,
+                    borderRadius: '0.75rem',
+                    border: 'none',
+                    background: 'transparent',
+                }}
+                className="backdrop:bg-black/80"
+            >
+                {activeImage && (
+                    <img
+                        src={activeImage}
+                        alt="Species"
+                        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '0.75rem' }}
+                    />
+                )}
+            </dialog>
 
-            <div className="max-w-4xl mx-auto">
-                <h3 className="text-center text-xl font-semibold text-gray-700 mb-4">Respostes</h3>
-                <ul className="space-y-6">
-                    {answeredQuestions.map((item, index) => (
-                        <li key={index} className="flex flex-col items-center bg-white shadow-md rounded-lg p-4">
-                            <button onClick={() => { setActiveImage(item.question.url.url.replace("square", "original")); dialogRef.current?.showModal() }}>
-                                <img
-                                    src={item.question.url.url.replace("square", "original")}
-                                    alt={`Correct species: ${returnName(item.question.species[item.question.correct])}`}
-                                    className="w-32 h-32 object-cover rounded mb-4"
-                                />
-                            </button>
-                            <p className={`text-lg font-medium ${item.isCorrect ? "text-green-600" : "text-red-600"}`}>
-                                {returnName(item.question.species[item.question.correct])}
-                            </p>
-                            {!item.isCorrect ? <p className='text-center'> La teva resposta: <br />{returnName(item.question.species[item.userResponse])}</p> : <></>}
-                            <dialog ref={dialogRef} onClick={() => dialogRef.current?.close()} className="w-2/3 max-w-none backdrop:bg-black/80">
-                                <img
-                                    src={activeImage ? activeImage : "https://inaturalist.org/attachments/sites/1-logo.svg?1688184492"}
-                                    alt="Species"
-                                    className="rounded w-full h-auto object-contain" />
-                            </dialog>
-                        </li>
-                    ))}
-                </ul>
+            <div className="results-wrap">
+                {/* Score summary */}
+                <div className="results-score">
+                    <h2 className="results-score__title">Test completat!</h2>
+                    <p className="results-score__stat">
+                        Has encertat{' '}
+                        <span className="results-score__num">{points}</span>
+                        {' '}de{' '}
+                        <span className="results-score__num">{numQuestions}</span>
+                        {' '}({pct}%)
+                    </p>
+                </div>
+
+                {/* Action buttons */}
+                <div className="results-actions">
+                    <Link href="/new_test" className="results-btn results-btn--primary">
+                        Fes un altre test
+                    </Link>
+                    <button
+                        className="results-btn results-btn--secondary"
+                        onClick={() => window.location.reload()}
+                    >
+                        Repeteix aquest test
+                    </button>
+                </div>
+
+                {/* Answers grid */}
+                <h3 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: 'var(--color-text)',
+                    alignSelf: 'flex-start',
+                }}>
+                    Respostes
+                </h3>
+
+                <div className="results-grid">
+                    {answeredQuestions.map((item, index) => {
+                        const imgUrl = item.question.url!.url.replace("square", "original");
+                        const correctName = returnName(item.question.species![item.question.correct!]);
+                        const userAnswerName = returnName(item.question.species![item.userResponse]);
+                        return (
+                            <div key={index} className="results-item">
+                                <div
+                                    className="results-item__img-wrap"
+                                    onClick={() => {
+                                        setActiveImage(imgUrl);
+                                        dialogRef.current?.showModal();
+                                    }}
+                                >
+                                    <img
+                                        src={imgUrl}
+                                        alt={correctName}
+                                        className="results-item__img"
+                                    />
+                                    <span className={`results-item__badge ${item.isCorrect ? 'results-item__badge--correct' : 'results-item__badge--wrong'}`}>
+                                        {item.isCorrect ? '✓' : '✗'}
+                                    </span>
+                                </div>
+                                <div className="results-item__body">
+                                    <p className="results-item__correct">{correctName}</p>
+                                    {!item.isCorrect && (
+                                        <>
+                                            <p className="results-item__wrong-label">La teva resposta</p>
+                                            <p className="results-item__wrong">{userAnswerName}</p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
-            <div className='flex'>
-                <button className="mx-1 my-8 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
-                    <Link href={`/new_test`}>Fes un altre test!</Link>
-                </button>
-                <button
-                    className="mx-1 my-8 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
-                    onClick={() => { window.location.reload() }}>
-                    Torna a fer el test!
-                </button>
-            </div>
-
-
         </div>
     );
 }
 
-
+/* ── Main test logic ─────────────────────────────────────── */
 function TestComponent() {
-    const searchParams = useSearchParams()
-    const taxon_id = searchParams.get('taxon_id')
-    const num_questions = searchParams.get('num_questions')
-    const num_species = searchParams.get('num_species')
+    const searchParams = useSearchParams();
+    const taxon_id = searchParams.get('taxon_id');
+    const num_questions = searchParams.get('num_questions');
+    const num_species = searchParams.get('num_species');
 
     const [taxonId, setTaxonId] = useState<string | null>(null);
-    const [taxonName, setTaxonName] = useState<string>("null");
+    const [taxonName, setTaxonName] = useState<string>("");
     const [numQuestions, setNumQuestions] = useState(5);
     const [numSpecies, setNumSpecies] = useState(10);
 
-    // Geofiltering coordinates (radius in km)
     const coords = { lat: 28.306262, lng: -16.514440, radius: 40 };
 
-    const [ans, setAns] = useState<number | null>(null);
-    const [data, setData] = useState<SpeciesData | null>(null);
-    const [question, setQuestion] = useState<
-        {
-            url: PhotoInfo | null,
-            species: any[] | null,
-            correct: number | null
-        } | null
-    >(null);
+    const [data, setData] = useState<{ total_results: number; results: Species[] } | null>(null);
+    const [question, setQuestion] = useState<QuestionState | null>(null);
+    const [questionIndex, setQuestionIndex] = useState(-1);   // -1 = not started
     const [points, setPoints] = useState(0);
-    const [answeredQuestions, setAnsweredQuestions] = useState<
-        { question: any; userResponse: number; isCorrect: boolean }[] // eslint-disable-line @typescript-eslint/no-explicit-any
-    >([]);
+    const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
 
-    // Set up taxonId and numQuestions from router query parameters
+    /* Resolve URL params */
     useEffect(() => {
-        if (taxon_id) { // Ensure query param is loaded before setting state
-            setTaxonId(/^\+?(0|[1-9]\d*)$/.test(taxon_id) ? taxon_id : "1");
-            //setNumQuestions(/^\+?(0|[1-9]\d*)$/.test(num_questions) ? num_questions : "1");
-            setNumQuestions(num_questions ? parseInt(num_questions) : 5);
-            setNumSpecies(num_species ? parseInt(num_species) : 10);
-        }
+        if (!taxon_id) return;
+        setTaxonId(/^\+?(0|[1-9]\d*)$/.test(taxon_id) ? taxon_id : "1");
+        setNumQuestions(num_questions ? parseInt(num_questions) : 5);
+        setNumSpecies(num_species ? parseInt(num_species) : 10);
     }, [taxon_id, num_questions, num_species]);
 
-    // Fetch species data based on taxonId
-    useEffect(() => {
-        if (taxonId) {
-            const apiUrl = `https://api.inaturalist.org/v1/taxa?taxon_id=${taxonId}&locale=ca&per_page=1`;
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(json => setTaxonName(returnName(json["results"][0])))
-                .catch(error => console.error(error));
-        }
-    }, [taxonId]);
-
-    // Fetch species data based on taxonId (geofiltered near coords)
+    /* Fetch taxon name */
     useEffect(() => {
         if (!taxonId) return;
+        fetch(`https://api.inaturalist.org/v1/taxa?taxon_id=${taxonId}&locale=ca&per_page=1`)
+            .then(r => r.json())
+            .then(json => setTaxonName(returnName(json["results"][0])))
+            .catch(console.error);
+    }, [taxonId]);
 
-        const apiUrl = `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=ca`;
-        fetch(apiUrl)
-            .then(response => response.json())
+    /* Fetch species pool */
+    useEffect(() => {
+        if (!taxonId) return;
+        fetch(`https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=ca`)
+            .then(r => r.json())
             .then(json => setData({
                 total_results: json.total_results,
                 results: json.results.map((r: any) => ({
                     ...r.taxon,
-                    observations_count: r.count
-                }))
+                    observations_count: r.count,
+                })),
             }))
-            .catch(error => console.error(error));
+            .catch(console.error);
     }, [taxonId, numSpecies]);
 
-    // Function to generate a new question
+    /* Generate a question */
     const generateQuestion = () => {
-        if (data) {
-            if (ans !== null) setAns(ans + 1);
-            else setAns(0);
-            if (data['total_results'] == 0) {
+        if (!data) return;
+        setQuestionIndex(i => i + 1);
+
+        if (data.total_results === 0) {
+            setQuestion({ url: null, species: null, correct: null });
+            return;
+        }
+
+        const species = filterZeros(data.results);
+        const numOpts = Math.min(species.length, 5);
+        const options = getRandomCombination(species, numOpts);
+        const correctIdx = Math.floor(Math.random() * numOpts);
+
+        fetch(`https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at`)
+            .then(r => r.json())
+            .then(json => {
+                const obs = json.results[Math.floor(Math.random() * json.results.length)];
                 setQuestion({
-                    url: null,
-                    species: null,
-                    correct: null
+                    url: obs.photos[0],
+                    species: options,
+                    correct: correctIdx,
                 });
-            } else {
-                const species = filterZeros(data["results"]);
-                const numOptions = Math.min(species.length, 5);
-                console.log(numSpecies)
-                console.log(species.length)
-                console.log(numOptions)
-                const options = getRandomCombination(species, numOptions);
-                const correctIndx = Math.floor(Math.random() * numOptions);
-                console.log(options)
-                const apiUrl = `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIndx]["id"]}&quality_grade=research&order=desc&order_by=created_at`;
-
-                fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(json => setQuestion({
-                        url: json["results"][Math.floor(Math.random() * json["results"].length)]["photos"][0],
-                        species: options,
-                        correct: correctIndx
-                    }))
-                    .catch(error => console.error(error));
-            }
-        }
+            })
+            .catch(console.error);
     };
 
-    const handleAnswer = (userResponse: number) => {
-        console.log(answeredQuestions)
-        const isCorrect = question?.correct === userResponse;
-
-        // Update points if correct
-        setPoints(points + (isCorrect ? 1 : 0));
-
-        // Track the question and response
-        setAnsweredQuestions((prev) => [
-            ...prev,
-            { question, userResponse, isCorrect },
-        ]);
-
-        // Generate a new question
-        generateQuestion();
-    };
-    // Call generateQuestion initially when data becomes available
+    /* Start when data arrives */
     useEffect(() => {
-        if (data) {
-            generateQuestion();
-        }
+        if (data) generateQuestion();
     }, [data]);
 
+    const handleAnswer = (userResponse: number) => {
+        const isCorrect = question?.correct === userResponse;
+        setPoints(p => p + (isCorrect ? 1 : 0));
+        setAnsweredQuestions(prev => [...prev, { question: question!, userResponse, isCorrect }]);
+        generateQuestion();
+    };
 
-    if (ans == null || ans < numQuestions) {
+    /* ── Render ── */
+    if (questionIndex >= numQuestions) {
         return (
-            <div>
-                {question
-                    ? <Question
-                        taxonName={taxonName}
-                        question={question}
-                        handleAnswer={handleAnswer} />
-                    : "Loading..."}
-            </div>
-        )
+            <Results
+                points={points}
+                numQuestions={numQuestions}
+                answeredQuestions={answeredQuestions}
+            />
+        );
     }
-    return <Results
-        points={points}
-        numQuestions={numQuestions}
-        answeredQuestions={answeredQuestions} />;
+
+    if (!question) {
+        return (
+            <div className="quiz-page">
+                <div className="skeleton" style={{ width: '100%', maxWidth: 900, height: 400, borderRadius: '1rem' }} />
+            </div>
+        );
+    }
+
+    return (
+        <Question
+            taxonName={taxonName}
+            question={question}
+            questionIndex={questionIndex}
+            numQuestions={numQuestions}
+            handleAnswer={handleAnswer}
+        />
+    );
 }
 
 export default function Test() {
     return (
-        <Suspense fallback={<p>Loading...</p>}>
+        <Suspense fallback={
+            <div className="quiz-page">
+                <div className="skeleton" style={{ width: '100%', maxWidth: 900, height: 400, borderRadius: '1rem' }} />
+            </div>
+        }>
             <TestComponent />
         </Suspense>
     );
