@@ -8,9 +8,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col">
+      <body className="flex flex-col" style={{ minHeight: '100dvh' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col pt-16">{children}</main>
+        <main
+          className="flex-1 flex flex-col"
+          style={{ paddingTop: 'var(--navbar-h)' }}
+        >
+          {children}
+        </main>
       </body>
     </html>
   );

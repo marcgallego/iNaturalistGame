@@ -15,6 +15,8 @@
   --color-link:         #3a6b35;
   --color-link-hover:   #2c5229;
 
+  --navbar-h: 8vh;
+
   --radius-card: 1rem;
   --shadow-card: 0 4px 24px 0 rgba(30, 42, 26, 0.08);
   --shadow-card-hover: 0 8px 32px 0 rgba(30, 42, 26, 0.14);
@@ -180,7 +182,8 @@
 
   /* ── Page background ────────────────────────────────────── */
   .taxa-page {
-    min-height: 100vh;
+    min-height: 0;
+    flex: 1;
     background-color: var(--color-bg);
     /* Subtle organic texture */
     background-image: radial-gradient(circle at 20% 10%, rgba(58,107,53,0.06) 0%, transparent 50%),
@@ -209,7 +212,8 @@
 @layer components {
 
   .form-page {
-    min-height: 100vh;
+    min-height: 0;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -373,7 +377,8 @@
 
   /* Shared page shell (same bg as taxa-page) */
   .quiz-page {
-    min-height: 100vh;
+    min-height: 0;
+    flex: 1;
     background-color: var(--color-bg);
     background-image: radial-gradient(circle at 20% 10%, rgba(58,107,53,0.06) 0%, transparent 50%),
                       radial-gradient(circle at 80% 90%, rgba(58,107,53,0.04) 0%, transparent 40%);
@@ -538,7 +543,8 @@
 
   /* ── Results ──────────────────────────────────────────── */
   .results-page {
-    min-height: 100vh;
+    min-height: 0;
+    flex: 1;
     background-color: var(--color-bg);
     background-image: radial-gradient(circle at 20% 10%, rgba(58,107,53,0.06) 0%, transparent 50%),
                       radial-gradient(circle at 80% 90%, rgba(58,107,53,0.04) 0%, transparent 40%);
