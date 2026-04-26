@@ -2,11 +2,205 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --color-bg:           #f4f6f2;
+  --color-surface:      #ffffff;
+  --color-border:       #e2e8dc;
+  --color-text:         #1e2a1a;
+  --color-muted:        #6b7a63;
+  --color-accent:       #3a6b35;
+  --color-accent-hover: #2c5229;
+  --color-accent-light: #eaf2e8;
+  --color-link:         #3a6b35;
+  --color-link-hover:   #2c5229;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 4px 24px 0 rgba(30, 42, 26, 0.08);
+  --shadow-card-hover: 0 8px 32px 0 rgba(30, 42, 26, 0.14);
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
 @layer base {
-    * {
-      @apply font-sans;
-    }
-    p {
-      @apply font-sans;
+  * {
+    font-family: var(--font-body);
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+}
+
+/* ── Layout ────────────────────────────────────────────────── */
+@layer components {
+
+  /* Page wrapper: side-by-side on md+, stacked on mobile */
+  .taxa-layout {
+    @apply flex flex-col items-stretch gap-6 w-full max-w-4xl mx-auto px-4 py-10;
+  }
+
+  @screen md {
+    .taxa-layout {
+      @apply flex-row;
+      /* items-stretch is the default — sidebar grows to match card height */
     }
   }
+
+  /* ── Main card ──────────────────────────────────────────── */
+  .taxa-card {
+    @apply flex flex-col items-center w-full bg-white p-6 rounded-[1rem] flex-1;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border);
+    animation: fadeSlideUp 0.4s ease both;
+  }
+
+  .taxa-card__title {
+    font-family: var(--font-display);
+    @apply text-2xl font-bold text-center mb-1 leading-tight;
+    color: var(--color-text);
+  }
+
+  .taxa-card__parent-link {
+    @apply text-sm font-medium mb-4 transition-colors duration-200;
+    color: var(--color-muted);
+  }
+
+  .taxa-card__parent-link:hover {
+    color: var(--color-accent);
+  }
+
+  .taxa-card__cta {
+    @apply inline-block rounded-lg py-2 px-6 font-semibold text-sm my-3 transition-all duration-200;
+    background-color: var(--color-accent);
+    color: #fff;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px 0 rgba(58, 107, 53, 0.18);
+  }
+
+  .taxa-card__cta:hover {
+    background-color: var(--color-accent-hover);
+    box-shadow: 0 4px 16px 0 rgba(58, 107, 53, 0.28);
+    transform: translateY(-1px);
+  }
+
+  .taxa-card__image-wrap {
+    @apply w-full rounded-xl overflow-hidden mb-2;
+    border: 1px solid var(--color-border);
+  }
+
+  .taxa-card__image {
+    @apply w-full object-cover;
+    height: 260px;
+    transition: transform 0.4s ease;
+  }
+
+  .taxa-card__image:hover {
+    transform: scale(1.03);
+  }
+
+  .taxa-card__attribution {
+    @apply text-xs italic text-center mt-1 mb-4;
+    color: var(--color-muted);
+  }
+
+  .taxa-card__no-image {
+    @apply flex items-center justify-center w-full rounded-xl mb-4 text-sm italic;
+    height: 180px;
+    background-color: var(--color-accent-light);
+    color: var(--color-muted);
+    border: 1px dashed var(--color-border);
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  .taxa-sidebar {
+    @apply w-full bg-white rounded-[1rem] p-5;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border);
+    max-height: 360px;
+    animation: fadeSlideUp 0.4s ease 0.08s both;
+  }
+
+  @screen md {
+    .taxa-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      max-height: none;
+    }
+  }
+
+  /* Only the list scrolls; the title stays pinned at the top */
+  .taxa-sidebar__scroll {
+    flex: 1 1 0;
+    overflow-y: auto;
+    mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent 100%);
+  }
+
+  .taxa-sidebar__title {
+    font-family: var(--font-display);
+    @apply text-lg font-semibold mb-4 pb-2;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .taxa-sidebar__item {
+    @apply block text-sm font-medium mb-2 px-3 py-2 rounded-lg transition-colors duration-150;
+    color: var(--color-link);
+  }
+
+  .taxa-sidebar__item:hover {
+    background-color: var(--color-accent-light);
+    color: var(--color-link-hover);
+  }
+
+  .taxa-sidebar__id {
+    @apply text-xs font-normal ml-1;
+    color: var(--color-muted);
+  }
+
+  /* ── Skeleton loading ───────────────────────────────────── */
+  .skeleton {
+    @apply rounded-lg animate-pulse;
+    background: linear-gradient(90deg, #e8ede5 25%, #dde5d9 50%, #e8ede5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease infinite;
+  }
+
+  /* ── Page background ────────────────────────────────────── */
+  .taxa-page {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    /* Subtle organic texture */
+    background-image: radial-gradient(circle at 20% 10%, rgba(58,107,53,0.06) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 90%, rgba(58,107,53,0.04) 0%, transparent 40%);
+  }
+}
+
+/* ── Animations ────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
