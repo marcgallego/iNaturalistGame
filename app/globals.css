@@ -130,7 +130,8 @@
     flex-direction: column;
     box-shadow: var(--shadow-card);
     border: 1px solid var(--color-border);
-    max-height: 360px;
+    /* On mobile: fixed height so the scroll container has space to fill */
+    height: 360px;
     animation: fadeSlideUp 0.4s ease 0.08s both;
   }
 
@@ -138,7 +139,7 @@
     .taxa-sidebar {
       width: 260px;
       flex-shrink: 0;
-      max-height: none;
+      height: auto;    /* desktop: driven by align-stretch from the card */
     }
   }
 
@@ -870,6 +871,7 @@
     grid-template-rows: 1fr;
     border-color: var(--color-accent);
     border-top-color: transparent;
+    /* transition duration must match the setTimeout in LocationPicker.tsx */
   }
 
   /* Inner wrapper needed for grid-template-rows animation trick */
