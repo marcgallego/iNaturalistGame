@@ -718,3 +718,79 @@
     transform: translateY(-1px);
   }
 }
+
+/* ── Location picker ───────────────────────────────────────── */
+@layer components {
+
+  .location-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .location-picker__map {
+    width: 100%;
+    height: 240px;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    /* Leaflet needs a block context */
+    display: block;
+    position: relative;
+  }
+
+  .location-picker__hint {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .location-picker__radius-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .location-picker__radius-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  .location-picker__slider {
+    flex: 1;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+    height: 4px;
+  }
+
+  .location-picker__radius-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    min-width: 4rem;
+    text-align: right;
+  }
+
+  /* Leaflet overrides to match design system */
+  .leaflet-container {
+    font-family: var(--font-body) !important;
+    background: var(--color-bg) !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 0.5rem !important;
+    box-shadow: var(--shadow-card) !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .leaflet-control-zoom a {
+    color: var(--color-text) !important;
+  }
+
+  .leaflet-control-zoom a:hover {
+    background-color: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+  }
+}

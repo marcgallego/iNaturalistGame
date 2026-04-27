@@ -8,7 +8,7 @@ import { returnName } from '@/app/utils'
 /* ── Types ───────────────────────────────────────────────── */
 type PhotoInfo = { url: string; attribution?: string };
 
-type Species = { id: number; observations_count: number;[key: string]: any };
+type Species = { id: number; observations_count: number; [key: string]: any };
 
 interface QuestionState {
     url: PhotoInfo | null;
@@ -116,7 +116,7 @@ function Question({
                     </button>
 
                     <div className="quiz-card__options">
-                        <p className="quiz-card__options-label">Quina espècie és?</p>
+                        <p className="quiz-card__options-label">De quina espècie és?</p>
                         {question.species!.map((species, i) => (
                             <button
                                 key={i}
@@ -259,21 +259,23 @@ function Results({
 /* ── Main test logic ─────────────────────────────────────── */
 function TestComponent() {
     const searchParams = useSearchParams();
-    const taxon_id = searchParams.get('taxon_id');
+    const taxon_id      = searchParams.get('taxon_id');
     const num_questions = searchParams.get('num_questions');
-    const num_species = searchParams.get('num_species');
+    const num_species   = searchParams.get('num_species');
+    const lat_param     = searchParams.get('lat');
+    const lng_param     = searchParams.get('lng');
+    const radius_param  = searchParams.get('radius');
 
-    const [taxonId, setTaxonId] = useState<string | null>(null);
-    const [taxonName, setTaxonName] = useState<string>("");
+    const [taxonId, setTaxonId]           = useState<string | null>(null);
+    const [taxonName, setTaxonName]       = useState<string>("");
     const [numQuestions, setNumQuestions] = useState(5);
-    const [numSpecies, setNumSpecies] = useState(10);
+    const [numSpecies, setNumSpecies]     = useState(10);
+    const [coords, setCoords]             = useState({ lat: 41.3874, lng: 2.1686, radius: 40 });
 
-    const coords = { lat: 28.306262, lng: -16.514440, radius: 40 };
-
-    const [data, setData] = useState<{ total_results: number; results: Species[] } | null>(null);
+    const [data, setData]         = useState<{ total_results: number; results: Species[] } | null>(null);
     const [question, setQuestion] = useState<QuestionState | null>(null);
     const [questionIndex, setQuestionIndex] = useState(-1);   // -1 = not started
-    const [points, setPoints] = useState(0);
+    const [points, setPoints]     = useState(0);
     const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
 
     /* Resolve URL params */
@@ -281,15 +283,20 @@ function TestComponent() {
         if (!taxon_id) return;
         setTaxonId(/^\+?(0|[1-9]\d*)$/.test(taxon_id) ? taxon_id : "1");
         setNumQuestions(num_questions ? parseInt(num_questions) : 5);
-        setNumSpecies(num_species ? parseInt(num_species) : 10);
-    }, [taxon_id, num_questions, num_species]);
+        setNumSpecies(num_species     ? parseInt(num_species)   : 10);
+        setCoords({
+            lat:    lat_param    ? parseFloat(lat_param)    : 41.3874,
+            lng:    lng_param    ? parseFloat(lng_param)    : 2.1686,
+            radius: radius_param ? parseInt(radius_param)   : 40,
+        });
+    }, [taxon_id, num_questions, num_species, lat_param, lng_param, radius_param]);
 
     /* Fetch taxon name */
     useEffect(() => {
         if (!taxonId) return;
-        fetch(`https://api.inaturalist.org/v1/taxa?taxon_id=${taxonId}&locale=ca&per_page=1`)
+        fetch(`https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=ca&per_page=1`)
             .then(r => r.json())
-            .then(json => setTaxonName(returnName(json["results"][0])))
+            .then(json => setTaxonName(returnName(json.results[0])))
             .catch(console.error);
     }, [taxonId]);
 
@@ -318,9 +325,9 @@ function TestComponent() {
             return;
         }
 
-        const species = filterZeros(data.results);
-        const numOpts = Math.min(species.length, 5);
-        const options = getRandomCombination(species, numOpts);
+        const species  = filterZeros(data.results);
+        const numOpts  = Math.min(species.length, 5);
+        const options  = getRandomCombination(species, numOpts);
         const correctIdx = Math.floor(Math.random() * numOpts);
 
         fetch(`https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at`)
@@ -328,7 +335,7 @@ function TestComponent() {
             .then(json => {
                 const obs = json.results[Math.floor(Math.random() * json.results.length)];
                 setQuestion({
-                    url: obs.photos[0],
+                    url:     obs.photos[0],
                     species: options,
                     correct: correctIdx,
                 });
