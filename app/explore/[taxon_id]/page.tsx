@@ -102,18 +102,18 @@ function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
     );
 }
 
-function TaxonSidebar({ children }: { children: ChildTaxon[] }) {
+function TaxonSidebar({ taxa }: { taxa: ChildTaxon[] }) {
     return (
         <aside className="taxa-sidebar">
             <h2 className="taxa-sidebar__title">Subtaxons</h2>
             <div className="taxa-sidebar__scroll">
-                {children.length === 0 ? (
+                {taxa.length === 0 ? (
                     <p className="text-sm italic" style={{ color: 'var(--color-muted)' }}>
                         Sense subtaxons
                     </p>
                 ) : (
                     <nav aria-label="Child taxa">
-                        {children.map(child => (
+                        {taxa.map(child => (
                             <Link
                                 key={child.id}
                                 href={`/explore/${child.id}`}
@@ -170,7 +170,7 @@ export default function Taxonomy({ params }: { params: Promise<{ taxon_id: strin
                     : <CardSkeleton />
                 }
                 {children !== null
-                    ? <TaxonSidebar children={children} />
+                    ? <TaxonSidebar taxa={children} />
                     : <SidebarSkeleton />
                 }
             </div>
