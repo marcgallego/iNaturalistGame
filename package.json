@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "main": "expo-router/entry",
+  "packageManager": "pnpm@11.0.7",
+  "engines": {
+    "pnpm": ">=11"
+  },
   "scripts": {
     "start": "expo start",
     "web": "expo start --web",
