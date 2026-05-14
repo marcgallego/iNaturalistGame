@@ -59,15 +59,18 @@ export function Title({
 
 export function FormField({
   label,
+  error,
   children,
 }: {
   label: string;
+  error?: string;
   children: ReactNode;
 }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
       {children}
+      {error ? <Text style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
 }
@@ -99,8 +102,15 @@ export function Button({
     disabled && styles.btnDisabled,
     style,
   ]);
+  // When wrapped in `Link asChild`, navigation comes from the injected
+  // `onPress`; only pass our own handler when there is no `href` so the two
+  // don't clobber each other.
   const content = (
-    <Pressable onPress={onPress} disabled={disabled} style={pressableStyle}>
+    <Pressable
+      onPress={href ? undefined : onPress}
+      disabled={disabled}
+      style={pressableStyle}
+    >
       <Text style={[styles.btnText, isSecondary && styles.btnTextSecondary]}>
         {label}
       </Text>
@@ -182,6 +192,10 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
+  },
+  fieldError: {
+    fontSize: 12,
+    color: colors.wrong,
   },
   input: {
     width: '100%',

@@ -34,10 +34,16 @@ pnpm android
 
 ### Notes for native
 
+- This project targets **Expo SDK 54**. `react-native-maps` and `expo-location`
+  are bundled with Expo Go for SDK 54, so `pnpm start` + Expo Go is enough for
+  day-to-day development.
+- A **development build** (`npx expo prebuild` / `expo run:*`) is only needed
+  once you require custom native config — most notably the Android Google Maps
+  API key below, which Expo Go cannot pick up.
 - **iOS** uses Apple Maps — no API key needed.
 - **Android** uses Google Maps: add a Maps SDK API key to `app.json` under
-  `android.config.googleMaps.apiKey` for the location picker map to render.
-- `react-native-maps` and `expo-location` require a development build (they work
-  in Expo Go on SDK 53). The web build uses Leaflet instead via platform-split
+  `android.config.googleMaps.apiKey` for the location picker map to render
+  (requires a development build).
+- The web build uses Leaflet instead of `react-native-maps` via platform-split
   files (`LocationPickerMap.web.tsx` / `LocationPickerMap.native.tsx`).
 

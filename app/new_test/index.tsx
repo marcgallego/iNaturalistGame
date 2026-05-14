@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import LocationPicker, { type Location } from '@/components/LocationPicker';
 import { Button, Card, FormField, NumberInput, Screen, Title } from '@/components/ui';
 import gameModes from '@/lib/game_modes.json';
+import { QUESTION_BOUNDS, SPECIES_BOUNDS, rangeError } from '@/lib/utils';
 import { colors, radius, spacing } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
@@ -31,14 +32,21 @@ export default function NewTest() {
     });
   }
 
-  const canStart = !!mode && !!numQuestions && !!numSpecies;
+  const questionsError = rangeError(numQuestions, QUESTION_BOUNDS);
+  const speciesError = rangeError(numSpecies, SPECIES_BOUNDS);
+  const canStart =
+    !!mode &&
+    numQuestions != null &&
+    numSpecies != null &&
+    !questionsError &&
+    !speciesError;
 
   return (
     <Screen maxWidth={520}>
       <Title>Nou joc</Title>
 
       <Card>
-        <FormField label="Número de preguntes">
+        <FormField label="Número de preguntes" error={questionsError}>
           <NumberInput
             value={numQuestions == null ? '' : String(numQuestions)}
             onChangeNumber={setNumQuestions}
@@ -46,7 +54,7 @@ export default function NewTest() {
           />
         </FormField>
 
-        <FormField label="Número d'espècies">
+        <FormField label="Número d'espècies" error={speciesError}>
           <NumberInput
             value={numSpecies == null ? '' : String(numSpecies)}
             onChangeNumber={setNumSpecies}

@@ -323,6 +323,10 @@ export default function Test() {
 
     const species = filterZeros(d.results);
     const numOpts = Math.min(species.length, 5);
+    if (numOpts === 0) {
+      setQuestion({ url: null, species: null, correct: null });
+      return;
+    }
     const options = getRandomCombination(species, numOpts);
     const correctIdx = Math.floor(Math.random() * numOpts);
 
@@ -331,10 +335,12 @@ export default function Test() {
     )
       .then((r) => r.json())
       .then((json) => {
-        const obs =
-          json.results[Math.floor(Math.random() * json.results.length)];
+        const results: any[] = json.results ?? [];
+        const obs = results[Math.floor(Math.random() * results.length)];
+        // No observations / no photo for this species: show a "no data"
+        // state instead of crashing on a missing dereference.
         setQuestion({
-          url: obs.photos[0],
+          url: obs?.photos?.[0] ?? null,
           species: options,
           correct: correctIdx,
         });

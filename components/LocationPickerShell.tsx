@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  ComponentType,
-} from 'react';
+import { ComponentType, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 
