@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "main": "expo-router/entry",
-  "packageManager": "pnpm@11.0.7",
+  "packageManager": "pnpm@10.33.4",
   "engines": {
-    "pnpm": ">=11"
+    "pnpm": ">=10"
   },
   "scripts": {
     "start": "expo start",
