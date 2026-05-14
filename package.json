@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "packageManager": "pnpm@10.33.4",
   "engines": {
-    "pnpm": ">=10"
+    "pnpm": ">=9"
   },
   "scripts": {
     "start": "expo start",
@@ -41,5 +41,8 @@
     "eslint": "^9.39.4",
     "eslint-config-expo": "^10.0.0",
     "typescript": "~5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
   }
 }
