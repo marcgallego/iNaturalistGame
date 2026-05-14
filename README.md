@@ -18,11 +18,26 @@ Taking quizzes on all of the taxonomic groups for which iNaturalist has images:
 
 ## Getting Started
 
-First, run the development server:
+This is an [Expo](https://expo.dev) app (React Native + react-native-web) that
+runs on **web, iOS and Android** from a single codebase.
+
+Install dependencies and start the dev server:
 
 ```bash
-npm run dev
+pnpm install
+pnpm start        # then press w / i / a
+# or directly:
+pnpm web
+pnpm ios
+pnpm android
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Notes for native
+
+- **iOS** uses Apple Maps — no API key needed.
+- **Android** uses Google Maps: add a Maps SDK API key to `app.json` under
+  `android.config.googleMaps.apiKey` for the location picker map to render.
+- `react-native-maps` and `expo-location` require a development build (they work
+  in Expo Go on SDK 53). The web build uses Leaflet instead via platform-split
+  files (`LocationPickerMap.web.tsx` / `LocationPickerMap.native.tsx`).
 
